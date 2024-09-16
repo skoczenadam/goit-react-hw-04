@@ -1,52 +1,71 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import ImageGallery from "./ImageGallery";
 import SearchBar from "./SearchBar";
-
-//654023
-//YtiABf9mZbNztBME72NpXFoEezRqrjN2m0Z0Qb-8_gs
-//DO1tJhOls9UICy8qiEBaS6bYTl1G0qt7V0e3a1AmZmo
+import toast, { Toaster } from "react-hot-toast";
+import Loader from "./Loader";
+import ErrorMessage from "./ErrorMessage";
+import { fetchGalleryWithTopic } from "./gallery-api";
+import LoadMoreBtn from "./LoadMoreBtn";
 
 const KEY = "YtiABf9mZbNztBME72NpXFoEezRqrjN2m0Z0Qb-8_gs";
 
 function App() {
   const [gallery, setGallery] = useState([]);
   const [searchImages, setSearchImages] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [currentPageUrl, setCurrentPageUrl] = useState(1);
   useEffect(() => {
     async function fetchImages() {
       if (!searchImages) return;
       try {
-        const response = await axios.get(
-          `https://api.unsplash.com/search/photos?page=1&query=${searchImages}&client_id=${KEY}`
+        setLoading(true);
+        const data = await fetchGalleryWithTopic(
+          searchImages,
+          KEY,
+          currentPageUrl
         );
-        if (response.data && response.data.results) {
-          setGallery(response.data.results);
-        } else {
-          setGallery([]);
-        }
-      } catch (error) {
-        console.error("Error fetching images:", error);
+        setGallery((prev) => [...prev, ...data]);
+      } catch (e) {
         setGallery([]);
+        setError(true);
+      } finally {
+        setLoading(false);
       }
     }
     fetchImages();
-  }, [searchImages]);
+  }, [searchImages, currentPageUrl]);
 
   const handleSearchBar = (e) => {
     e.preventDefault();
-    console.log(gallery);
     const form = e.target;
+    if (form.elements.input.value.trim() === "") {
+      toast.error("Empty search bar!");
+      return;
+    }
+    setGallery([]);
     setSearchImages(form.elements.input.value);
     form.reset();
   };
 
+  const handleOnClick = () => {
+    setCurrentPageUrl(currentPageUrl + 1);
+    console.log(currentPageUrl);
+  };
+
   return (
     <div>
+      <Toaster />
       <SearchBar onSubmit={handleSearchBar} />
+      {loading && <Loader />}
+      {error && <ErrorMessage />}
       {gallery && gallery.length > 0 ? (
-        <ImageGallery gallery={gallery} />
+        <>
+          <ImageGallery gallery={gallery} />
+          <LoadMoreBtn onNextPage={handleOnClick} />
+        </>
       ) : (
-        <p>No images found</p>
+        <p></p>
       )}
     </div>
   );
