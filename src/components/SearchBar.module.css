@@ -27,4 +27,9 @@
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   cursor: pointer;
+  transition: 300ms;
+}
+
+.button:hover {
+  background-color: rgb(71, 71, 247);
 }
