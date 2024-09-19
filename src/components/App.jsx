@@ -98,7 +98,7 @@ function App() {
           <LoadMoreBtn onNextPage={handleOnClick} />
         </>
       ) : noResults ? (
-        <p className={css.info}>No images Found</p>
+        <p className={css.info}>No images found</p>
       ) : (
         <p></p>
       )}
