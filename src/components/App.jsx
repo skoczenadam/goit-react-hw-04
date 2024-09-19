@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ImageGallery from "./ImageGallery";
 import SearchBar from "./SearchBar";
 import toast, { Toaster } from "react-hot-toast";
@@ -8,6 +8,7 @@ import { fetchGalleryWithTopic } from "./gallery-api";
 import LoadMoreBtn from "./LoadMoreBtn";
 import Modal from "react-modal";
 import ImageModal from "./ImageModal";
+import { debounce } from "lodash";
 
 Modal.setAppElement("#root");
 
@@ -20,6 +21,12 @@ function App() {
   const [error, setError] = useState(false);
   const [currentPageUrl, setCurrentPageUrl] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
+
+  const debouncedSetSearchImages = useCallback(
+    debounce((value) => setSearchImages(value), 300),
+    []
+  );
+
   useEffect(() => {
     async function fetchImages() {
       if (!searchImages) return;
@@ -31,6 +38,7 @@ function App() {
           currentPageUrl
         );
         setGallery((prev) => [...prev, ...data]);
+        setError(false);
       } catch (e) {
         setGallery([]);
         setError(true);
@@ -43,6 +51,7 @@ function App() {
 
   const handleSearchBar = (e) => {
     e.preventDefault();
+    setCurrentPageUrl(1);
     const form = e.target;
     if (form.elements.input.value.trim() === "") {
       toast.error("Empty search bar!", {
@@ -51,7 +60,7 @@ function App() {
       return;
     }
     setGallery([]);
-    setSearchImages(form.elements.input.value);
+    debouncedSetSearchImages(form.elements.input.value);
     form.reset();
   };
 
