@@ -9,6 +9,7 @@ import LoadMoreBtn from "./LoadMoreBtn";
 import Modal from "react-modal";
 import ImageModal from "./ImageModal";
 import { debounce } from "lodash";
+import css from "./Api.module.css";
 
 Modal.setAppElement("#root");
 
@@ -21,6 +22,7 @@ function App() {
   const [error, setError] = useState(false);
   const [currentPageUrl, setCurrentPageUrl] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [noResults, setNoResults] = useState(false);
 
   const debouncedSetSearchImages = useCallback(
     debounce((value) => setSearchImages(value), 300),
@@ -37,6 +39,11 @@ function App() {
           KEY,
           currentPageUrl
         );
+        if (data.length === 0 && currentPageUrl === 1) {
+          setNoResults(true);
+        } else {
+          setNoResults(false);
+        }
         setGallery((prev) => [...prev, ...data]);
         setError(false);
       } catch (e) {
@@ -52,6 +59,7 @@ function App() {
   const handleSearchBar = (e) => {
     e.preventDefault();
     setCurrentPageUrl(1);
+    setNoResults(false);
     const form = e.target;
     if (form.elements.input.value.trim() === "") {
       toast.error("Empty search bar!", {
@@ -77,7 +85,7 @@ function App() {
   };
 
   return (
-    <div>
+    <div className={css.container}>
       <Toaster />
       <SearchBar onSubmit={handleSearchBar} />
       {error && <ErrorMessage />}
@@ -89,6 +97,8 @@ function App() {
           />
           <LoadMoreBtn onNextPage={handleOnClick} />
         </>
+      ) : noResults ? (
+        <p className={css.info}>No images Found</p>
       ) : (
         <p></p>
       )}
